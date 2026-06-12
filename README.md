@@ -56,13 +56,13 @@ rm -rf nodejs/.git nodejs/.env
 # 然后按目标语言逐项调整
 ```
 
-差异点（摘要）：
+后端差异点（摘要）：
 
 | 维度 | java/ | python/ | golang/ |
 |------|-------|---------|---------|
-| 基础镜像 | `eclipse-temurin:17` | `ghcr.io/astral-sh/uv:python3.12-bookworm-slim` | `distroless/static` |
-| 后端产物 | `target/*.jar` | 源码同步 + `uv sync --frozen` | `go build -o *.bin` |
-| 启动命令 | `java -jar ...` | `uv run uvicorn main:app` | 直接执行二进制 |
-| 健康检查 | `CMD-SHELL` | `CMD-SHELL` | 无 shell，按项目需要添加 `CMD` |
-| 依赖变更检测 | `package.json` | `pyproject.toml` / `uv.lock` | `go.mod` / `go.sum` |
-| 镜像体积 | ~500MB | ~150MB | ~10MB |
+| 后端运行镜像 | `eclipse-temurin:17-jdk-jammy` | `ghcr.io/astral-sh/uv:python3.12-bookworm-slim` | `gcr.io/distroless/static-debian12:nonroot` |
+| 后端构建方式 | 宿主机执行 `mvn clean package` | 容器内执行 `uv sync --frozen` | 构建容器执行 `go build` |
+| 后端产物 | Maven 生成的 jar 文件 | 同步后的源码目录 + `.venv` | 项目名对应的静态二进制 |
+| 默认启动命令 | `java -jar` 运行挂载的 jar | `uv run uvicorn main:app` | 直接执行挂载的二进制 |
+| 容器内 API 端口 | `8080` | `8000` | `8080` |
+| 后端依赖输入 | `pom.xml` | `pyproject.toml` + `uv.lock` | `go.mod` + `go.sum` |
