@@ -8,7 +8,7 @@
 templ/
 ├── java/        # Spring Boot fat-jar 后端（已实现）
 ├── python/      # FastAPI + uvicorn 后端（已实现）
-└── golang/      # Golang 后端（占位）
+└── golang/      # Golang 后端（已实现）
 ```
 
 ## 各模板状态
@@ -17,9 +17,9 @@ templ/
 |------|------|---------|------|
 | [`java/`](java/) | ✅ 已实现 | Spring Boot fat-jar | 当前生产使用 |
 | [`python/`](python/) | ✅ 已实现 | FastAPI / uvicorn / uv | Python API 模板 |
-| [`golang/`](golang/) | ⏳ 占位 | 单一静态二进制 | 待首个 Golang 项目落地 |
+| [`golang/`](golang/) | ✅ 已实现 | 单一静态二进制 | Golang API 模板 |
 
-> `python/` 已提供完整 FastAPI 模板；`golang/` 仍为占位目录，README 中列出相对于 `java/` 模板实现时必须改的差异点。
+> `python/` 和 `golang/` 已提供完整后端模板，分别覆盖 FastAPI 与 Go 静态二进制部署。
 
 ## 共享设计原则
 
@@ -51,9 +51,9 @@ docker compose up -d               # 启动
 实现新的语言模板时，可复制已实现模板作为起点，再按目标语言调整镜像、构建命令、启动命令和健康检查。
 
 ```bash
-cp -r java/ golang/
-rm -rf golang/.git golang/.env
-# 然后按 golang/README.md 列出的差异点逐项改
+cp -r java/ nodejs/
+rm -rf nodejs/.git nodejs/.env
+# 然后按目标语言逐项调整
 ```
 
 差异点（摘要）：
@@ -63,6 +63,6 @@ rm -rf golang/.git golang/.env
 | 基础镜像 | `eclipse-temurin:17` | `ghcr.io/astral-sh/uv:python3.12-bookworm-slim` | `distroless/static` |
 | 后端产物 | `target/*.jar` | 源码同步 + `uv sync --frozen` | `go build -o *.bin` |
 | 启动命令 | `java -jar ...` | `uv run uvicorn main:app` | 直接执行二进制 |
-| 健康检查 | `CMD-SHELL` | `CMD-SHELL` | `CMD`（distroless 无 shell） |
+| 健康检查 | `CMD-SHELL` | `CMD-SHELL` | 无 shell，按项目需要添加 `CMD` |
 | 依赖变更检测 | `package.json` | `pyproject.toml` / `uv.lock` | `go.mod` / `go.sum` |
 | 镜像体积 | ~500MB | ~150MB | ~10MB |

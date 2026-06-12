@@ -2,11 +2,14 @@
 *.log
 !java/nginx/log/access.log
 !python/nginx/log/access.log
+!golang/nginx/log/access.log
 java/nginx/www/
 java/app/
 python/nginx/www/
 python/app/
 python/.uv-cache/
+golang/nginx/www/
+golang/app/
 
 # Local editor and OS metadata
 .DS_Store
