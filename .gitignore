@@ -1,8 +1,12 @@
 # Runtime logs and generated deployment outputs
 *.log
 !java/nginx/log/access.log
+!python/nginx/log/access.log
 java/nginx/www/
 java/app/
+python/nginx/www/
+python/app/
+python/.uv-cache/
 
 # Local editor and OS metadata
 .DS_Store

@@ -1,23 +1,95 @@
-# Python 部署模板（占位）
+# Python 部署模板
 
-> 计划中的 Python 后端部署编排模板，参照 `../java/` 实现。
->
-> **状态**：未开始
+> FastAPI 后端（uv 管理依赖、uvicorn 启动）+ 静态前端 + MySQL/Redis 的容器化部署编排。
+> 基础件、nginx、前端部署方式与 `../java/` 模板保持一致，主要差异是后端 API 的运行方式。
 
-## 与 java/ 模板的差异点（待实现）
+## 在仓库中的位置
 
-- **运行时镜像**：`python:3.12-slim`（或具体项目版本），无需 JDK
-- **后端产物**：无 fat-jar；改用 `pip install -r requirements.txt` 或 `uv sync`，启动命令为 `gunicorn` / `uvicorn` / `python -m`
-- **后端构建**：`bin/update.sh` 中 `mvn clean package` → `pip install --no-deps` 或 `uv pip install --system`
-- **网络/挂载**：保留 `mysql` / `redis` / `web` 三个服务；`app` 服务换成 Python 镜像
-- **派生规则**：`.env` 中 `ARTIFACT_NAME`（无意义，删除）；`DIST_SRC` 仍保留前端
-- **依赖锁定**：`requirements.txt` 代替 `package.json` 检测逻辑（参考 `bin/update-web.sh` 中 `git diff` 检测）
+```text
+templ/
+├── python/                  # Python 栈部署模板（本目录）
+│   ├── docker-compose.yml
+│   ├── .env                 # 项目变量集中地
+│   ├── nginx/conf/nginx.conf
+│   ├── bin/
+│   │   ├── update.sh
+│   │   └── update-web.sh
+│   ├── CLAUDE.md
+│   └── README.md
+├── java/
+└── golang/
+```
 
-## 占位文件
+源代码不在本仓库，需配合：
+- 后端 git 仓库（`${SRC_BACKEND}`）：标准 uv 项目，包含 `pyproject.toml` 和 `uv.lock`
+- 前端 git 仓库（`${SRC_FRONTEND}`）：`pnpm run build` 产物默认为 `dist/`
 
-本目录为占位，等待首个 Python 项目落地时按 java/ 的结构填充：
-- `docker-compose.yml`
-- `.env`
-- `nginx/conf/nginx.conf`
-- `bin/update.sh` / `bin/update-web.sh`
-- `CLAUDE.md`
+## Python 后端约定
+
+后端默认入口遵循 FastAPI 常见约定：
+
+```text
+main.py      # 文件名
+app          # FastAPI 实例名
+```
+
+容器启动命令固定为：
+
+```bash
+uv run uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+如果项目入口不是 `main:app`，直接修改 `docker-compose.yml` 的 `app.command`。`.env` 不为 Python 入口增加额外变量，保持模板配置简洁。
+
+## 快速开始
+
+```bash
+cd python/
+sed -i "s/aps/cookbook/g" .env
+docker compose config
+docker compose up -d
+```
+
+`.env` 顶部 4 行是新项目必改项：
+
+| 变量 | 含义 | 示例 |
+|------|------|------|
+| `PROJECT_NAME` | 项目短名，驱动库名/容器名/路径 | `cookbook` |
+| `DEPLOY_ROOT` | 本部署模板所在目录 | `/home/xmap/cookbook` |
+| `SRC_BACKEND` | FastAPI 后端仓库路径 | `~/src/cookbook` |
+| `SRC_FRONTEND` | 前端仓库路径 | `~/src/cookbook-web` |
+
+## 部署命令
+
+```bash
+bin/update.sh        # 拉取后端 → 同步源码 → uv sync --frozen → 重启 app
+bin/update-web.sh    # 拉取前端 → 条件 pnpm install → 构建 → 同步 dist 到 nginx
+```
+
+`bin/update.sh` 会把 `${SRC_BACKEND}` 同步到 `${DEPLOY_ROOT}/app/`，排除 `.git`、`.venv`、`__pycache__` 和 `.pytest_cache`。依赖安装在容器内执行：
+
+```bash
+docker compose run --rm --no-deps app uv sync --frozen
+```
+
+因此后端仓库必须提交 `uv.lock`。如果依赖未锁定，先在后端项目中执行 `uv lock`。
+
+## 服务结构
+
+`docker-compose.yml` 定义 4 个服务：
+
+- `mysql`：MySQL 8.0，库名和账号由 `PROJECT_NAME` 派生。
+- `redis`：Redis 7 Alpine，默认无密码。
+- `app`：`ghcr.io/astral-sh/uv:python3.12-bookworm-slim`，运行 FastAPI。
+- `web`：nginx，挂载静态前端并将 `/api/` 反代到 `app:8000`。
+
+## 自定义清单
+
+| 场景 | 改哪里 |
+|------|--------|
+| 后端入口不是 `main:app` | `docker-compose.yml` 的 `app.command` |
+| Python 版本需要调整 | `docker-compose.yml` 的 `app.image` |
+| FastAPI 监听端口不是 8000 | `docker-compose.yml` 的 `app.ports`、`app.command` 和 nginx `proxy_pass` |
+| 前端输出目录不是 `dist/` | `.env` 的 `DIST_SRC` |
+| 端口冲突 | `.env` 的 `APP_PORT` / `WEB_PORT` / `DATABASE_PORT` / `REDIS_PORT` |
+| 生产数据库密码 | `.env` 的 `DATABASE_PASSWORD` |

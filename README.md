@@ -7,7 +7,7 @@
 ```
 templ/
 ├── java/        # Spring Boot fat-jar 后端（已实现）
-├── python/      # Python 后端（占位）
+├── python/      # FastAPI + uvicorn 后端（已实现）
 └── golang/      # Golang 后端（占位）
 ```
 
@@ -16,10 +16,10 @@ templ/
 | 目录 | 状态 | 后端形态 | 备注 |
 |------|------|---------|------|
 | [`java/`](java/) | ✅ 已实现 | Spring Boot fat-jar | 当前生产使用 |
-| [`python/`](python/) | ⏳ 占位 | gunicorn / uvicorn | 待首个 Python 项目落地 |
+| [`python/`](python/) | ✅ 已实现 | FastAPI / uvicorn / uv | Python API 模板 |
 | [`golang/`](golang/) | ⏳ 占位 | 单一静态二进制 | 待首个 Golang 项目落地 |
 
-> 占位目录各含一份 `README.md`，列出相对于 `java/` 模板**实现时必须改的差异点**（镜像、构建命令、健康检查形式等）。
+> `python/` 已提供完整 FastAPI 模板；`golang/` 仍为占位目录，README 中列出相对于 `java/` 模板实现时必须改的差异点。
 
 ## 共享设计原则
 
@@ -48,21 +48,21 @@ docker compose up -d               # 启动
 
 ## 实现新模板
 
-直接复制 `java/` 整套文件作为起点，按对应占位 README 列出的差异点逐项修改：
+实现新的语言模板时，可复制已实现模板作为起点，再按目标语言调整镜像、构建命令、启动命令和健康检查。
 
 ```bash
-cp -r java/ python/
-rm -rf python/.git python/.env
-# 然后按 python/README.md 列出的差异点逐项改
+cp -r java/ golang/
+rm -rf golang/.git golang/.env
+# 然后按 golang/README.md 列出的差异点逐项改
 ```
 
 差异点（摘要）：
 
 | 维度 | java/ | python/ | golang/ |
 |------|-------|---------|---------|
-| 基础镜像 | `eclipse-temurin:17` | `python:3.12-slim` | `distroless/static` |
-| 后端产物 | `target/*.jar` | `pip install` | `go build -o *.bin` |
-| 启动命令 | `java -jar ...` | `gunicorn` / `uvicorn` | 直接执行二进制 |
+| 基础镜像 | `eclipse-temurin:17` | `ghcr.io/astral-sh/uv:python3.12-bookworm-slim` | `distroless/static` |
+| 后端产物 | `target/*.jar` | 源码同步 + `uv sync --frozen` | `go build -o *.bin` |
+| 启动命令 | `java -jar ...` | `uv run uvicorn main:app` | 直接执行二进制 |
 | 健康检查 | `CMD-SHELL` | `CMD-SHELL` | `CMD`（distroless 无 shell） |
-| 依赖变更检测 | `package.json` | `requirements.txt` | `go.mod` / `go.sum` |
+| 依赖变更检测 | `package.json` | `pyproject.toml` / `uv.lock` | `go.mod` / `go.sum` |
 | 镜像体积 | ~500MB | ~150MB | ~10MB |
