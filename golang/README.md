@@ -40,7 +40,7 @@ CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/${PROJECT_N
 
 ```bash
 cd golang/
-sed -i "s/aps/cookbook/g" .env
+sed -i "s/app/cookbook/g" .env
 docker compose config
 docker compose up -d
 ```
@@ -50,7 +50,7 @@ docker compose up -d
 | 变量 | 含义 | 示例 |
 |------|------|------|
 | `PROJECT_NAME` | 项目短名，驱动库名/容器名/二进制名/路径 | `cookbook` |
-| `DEPLOY_ROOT` | 本部署模板所在目录 | `/home/xmap/cookbook` |
+| `DEPLOY_ROOT` | 本部署模板所在目录 | `/home/tony/cookbook` |
 | `SRC_BACKEND` | Golang 后端仓库路径 | `~/src/cookbook` |
 | `SRC_FRONTEND` | 前端仓库路径 | `~/src/cookbook-web` |
 

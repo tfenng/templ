@@ -37,9 +37,9 @@ docker-compose.yml 内做 `${...}` 嵌套展开（compose 自身支持）。`.en
 
 | 来源 | 派生为 |
 |------|--------|
-| `PROJECT_NAME=aps` | 容器名 `aps-app`、库名 `aps`、账号 `aps`、JAR 名 `aps.jar` |
-| `DEPLOY_ROOT=/home/xmap/aps` | JAR 挂载点、nginx 三个挂载点 |
-| `DATA_ROOT=/home/xmap/data` | mysql/redis 数据卷 `.../${PROJECT_NAME}/{db,redis}` |
+| `PROJECT_NAME=app` | 容器名 `app-app`、库名 `app`、账号 `app`、JAR 名 `app.jar` |
+| `DEPLOY_ROOT=/home/tony/app` | JAR 挂载点、nginx 三个挂载点 |
+| `DATA_ROOT=/home/tony/data` | mysql/redis 数据卷 `.../${PROJECT_NAME}/{db,redis}` |
 
 修改任一上游变量，docker compose 会自动重算所有挂载点。
 
@@ -76,7 +76,7 @@ bin/update-web.sh
 2. 若 commit 无变化直接 `exit 0`（不构建、不重启）
 3. `mvn clean package` 生成 `target/${ARTIFACT_NAME}.jar`（默认 `ARTIFACT_NAME=$PROJECT_NAME`，可在 `.env` 覆盖）
 4. `rsync -av` 同步到 `$DEPLOY_ROOT/app/`
-5. `cd $PROJECT_ROOT && docker compose restart app`（用 compose 服务名 `app`，不是旧的 `aps`）
+5. `cd $PROJECT_ROOT && docker compose restart app`（用 compose 服务名 `app`）
 
 ### `bin/update-web.sh`（前端）
 1. `cd $SRC_FRONTEND && git pull origin master`
@@ -97,7 +97,7 @@ SRC_FRONTEND=~/src/xxx-web        # 前端 git 仓库路径
 ```
 
 可选调整：
-- `DATA_ROOT=/home/xmap/data` — 如果数据卷父目录不在默认位置
+- `DATA_ROOT=/home/tony/data` — 如果数据卷父目录不在默认位置
 - `ARTIFACT_NAME=` — 如果 Maven `<artifactId>` 与 `PROJECT_NAME` 不一致（默认等于 `PROJECT_NAME`）
 - `DIST_SRC=` — 如果前端构建输出目录不是 `dist/`（如 Vite 的 `outDir` 自定义）
 - `APP_PORT` / `WEB_PORT` / `DATABASE_PORT` / `REDIS_PORT` — 端口冲突时调整

@@ -39,7 +39,7 @@ templ/
 ```bash
 cd java/           # 进入 Java 模板
 cat README.md      # 阅读该模板的使用说明
-sed -i 's/aps/<your-name>/g' .env   # 派生项目关键字
+sed -i 's/app/<your-name>/g' .env   # 派生项目关键字
 docker compose config              # 验证派生结果
 docker compose up -d               # 启动
 ```

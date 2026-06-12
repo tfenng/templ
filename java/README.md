@@ -33,12 +33,12 @@ templ/
 
 ```bash
 # 方式 A：克隆整个仓库（保留 git 历史，方便后续 sync 模板更新）
-git clone <templ-repo-url> /home/xmap/cookbook
-cd /home/xmap/cookbook
+git clone <templ-repo-url> /home/tony/cookbook
+cd /home/tony/cookbook
 rm -rf .git && git init   # 重新初始化为新项目的部署仓库
 
 # 方式 B：仅复制需要的文件到已有项目目录
-SRC=<templ-repo-url> && DEST=/home/xmap/cookbook
+SRC=<templ-repo-url> && DEST=/home/tony/cookbook
 mkdir -p "$DEST"
 curl -fsSL "$SRC/raw/master/docker-compose.yml" -o "$DEST/docker-compose.yml"
 curl -fsSL "$SRC/raw/master/.env"             -o "$DEST/.env"
@@ -51,21 +51,21 @@ chmod +x "$DEST/bin/"*.sh
 
 ### 2. 替换项目关键字（核心步骤）
 
-`.env` 中所有 `aps` 都对应项目短名 `cookbook`，一行 sed 即可全部替换：
+`.env` 中所有 `app` 都对应项目短名 `cookbook`，一行 sed 即可全部替换：
 
 ```bash
-sed -i 's/aps/cookbook/g' .env
+sed -i 's/app/cookbook/g' .env
 ```
 
-这条命令会改 `.env` 中 5 处 `aps`：
+这条命令会改 `.env` 中 5 处 `app`：
 
 | 字段 | 替换前 | 替换后 |
 |------|--------|--------|
-| `PROJECT_NAME` | `aps` | `cookbook` |
-| `DEPLOY_ROOT` | `/home/xmap/aps` | `/home/xmap/cookbook` |
-| `SRC_BACKEND` | `~/src/aps` | `~/src/cookbook` |
-| `SRC_FRONTEND` | `~/src/aps-web` | `~/src/cookbook-web` |
-| `DATABASE_PASSWORD` | `aps` | `cookbook` |
+| `PROJECT_NAME` | `app` | `cookbook` |
+| `DEPLOY_ROOT` | `/home/tony/app` | `/home/tony/cookbook` |
+| `SRC_BACKEND` | `~/src/app` | `~/src/cookbook` |
+| `SRC_FRONTEND` | `~/src/app-web` | `~/src/cookbook-web` |
+| `DATABASE_PASSWORD` | `app` | `cookbook` |
 
 > `docker-compose.yml` / `bin/*.sh` / `nginx.conf` 全部走 `${PROJECT_NAME}` 派生，不需要再改。
 
@@ -75,10 +75,10 @@ sed -i 's/aps/cookbook/g' .env
 docker compose config | grep -E "(volume|container_name):" -A 1
 ```
 
-应该看到所有路径里的 `aps` 都已经变成 `cookbook`，例如：
-- `aps-app` → `cookbook-app`
-- `/home/xmap/aps/app/aps.jar` → `/home/xmap/cookbook/app/cookbook.jar`
-- `/home/xmap/data/aps/db` → `/home/xmap/data/cookbook/db`
+应该看到所有路径里的 `app` 都已经变成 `cookbook`，例如：
+- `app-app` → `cookbook-app`
+- `/home/tony/app/app/app.jar` → `/home/tony/cookbook/app/cookbook.jar`
+- `/home/tony/data/app/db` → `/home/tony/data/cookbook/db`
 
 ### 4. 启动服务
 
@@ -94,7 +94,7 @@ docker compose ps      # mysql 应显示 healthy，app 应 Up
 | 变量 | 含义 | 示例 |
 |------|------|------|
 | `PROJECT_NAME` | 项目短名，驱动库名/容器名/JAR 名/路径 | `cookbook` |
-| `DEPLOY_ROOT` | 本仓库所在目录（也是 `docker compose` 运行目录） | `/home/xmap/cookbook` |
+| `DEPLOY_ROOT` | 本仓库所在目录（也是 `docker compose` 运行目录） | `/home/tony/cookbook` |
 | `SRC_BACKEND` | 后端 git 仓库路径 | `~/src/cookbook` |
 | `SRC_FRONTEND` | 前端 git 仓库路径 | `~/src/cookbook-web` |
 
@@ -102,7 +102,7 @@ docker compose ps      # mysql 应显示 healthy，app 应 Up
 
 | 变量 | 默认值 | 何时需要改 |
 |------|--------|-----------|
-| `DATA_ROOT` | `/home/xmap/data` | 持久化数据不想放在默认位置 |
+| `DATA_ROOT` | `/home/tony/data` | 持久化数据不想放在默认位置 |
 | `APP_PORT` / `WEB_PORT` | `8080` / `80` | 端口冲突 |
 | `DATABASE_PORT` / `REDIS_PORT` | `3306` / `6379` | 同上 |
 | `DATABASE_ROOT` | `imroot` | 改 root 密码 |
