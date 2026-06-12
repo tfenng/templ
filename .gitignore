@@ -1,0 +1,9 @@
+# Runtime logs and generated deployment outputs
+*.log
+java/nginx/www/
+java/app/
+
+# Local editor and OS metadata
+.DS_Store
+.idea/
+.vscode/
