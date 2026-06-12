@@ -1,5 +1,6 @@
 # Runtime logs and generated deployment outputs
 *.log
+!java/nginx/log/access.log
 java/nginx/www/
 java/app/
 
